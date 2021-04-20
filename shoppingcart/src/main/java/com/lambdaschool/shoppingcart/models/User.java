@@ -1,11 +1,16 @@
 package com.lambdaschool.shoppingcart.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -170,6 +175,12 @@ public class User
      */
     public void setPassword(String password)
     {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        this.password = passwordEncoder.encode(password);
+    }
+    // For when we don't want to use encryption like when working internally with users
+    public void setPasswordNoEncrypt(String password)
+    {
         this.password = password;
     }
 
@@ -212,4 +223,25 @@ public class User
     {
         this.carts = carts;
     }
+
+    /*
+    * This is the fourth Step in setting up Authorization/authentication
+    * We came here from services/SecurityUserServiceImpl
+    * We need to create the getAuthority() method and set up encoding in setPassword()
+    * */
+    @JsonIgnore
+    public List<SimpleGrantedAuthority> getAuthority() {
+        List<SimpleGrantedAuthority> rtnList = new ArrayList<>();
+
+        for(UserRoles ur : this.roles) {
+            String myRole = "ROLE_" + ur.getRole().getName();
+            rtnList.add(new SimpleGrantedAuthority(myRole));
+        }
+
+        return rtnList;
+    }
+    /*
+    * Now that the Authorization server is set up we can move onto the Resource Server
+    * We are going to head back to the config package and create ResourceServerConfig
+    * */
 }

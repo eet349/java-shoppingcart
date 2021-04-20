@@ -1,6 +1,8 @@
 package com.lambdaschool.shoppingcart.services;
 
 import org.springframework.data.domain.AuditorAware;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -21,8 +23,24 @@ public class UserAuditing
     @Override
     public Optional<String> getCurrentAuditor()
     {
+
         String uname;
-        uname = "SYSTEM";
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if(authentication == null) {
+            uname = "SYSTEM";
+        } else {
+            uname = authentication.getName();
+        }
+
+        //uname = authentication == null ? "SYSTEM" : authentication.getName();
+
         return Optional.of(uname);
     }
 }
+/*
+* Ok all done with this. We can now use the name of someone in our auditing fields if they are authenticated
+* Now we have to fix an issue in our UserServiceImpl where we are calling setPassword() which will encrypt our password again
+* Since we dont want that we have to find the save() and update() methods using setPassword() and change it to setPasswordNoEncrypt()
+* */
